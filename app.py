@@ -56,11 +56,21 @@ def webkiosk_login(e_no , dob , password):
 
     return attendance
 
+def timetable_api(batch, attendance):
+  subjects = []
+  for data in attendance:
+    if data["subject"].split(" - ")[0] == "MINOR PROJECT-2":
+      continue
+    subjects.append(data["subject"].split(" - ")[0])
+  res = requests.post('https://jiit-timetable.herokuapp.com/v2', json={'batch': batch, 'enrolled_courses': subjects})
+  return res.json()["result"]
+
 class AttendanceApi(Resource):
     def post(self):
         data = request.get_json()
         attendance = webkiosk_login(data['eno'] , data['dob'] , data['password'])
-        return {'attendance' : attendance} , 201
+        timetable = timetable_api(data['batch'] , attendance)
+        return {'attendance' : attendance , 'timetable' : timetable} , 201
 
 api.add_resource(AttendanceApi , '/')
 
